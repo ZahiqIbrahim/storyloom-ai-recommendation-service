@@ -39,6 +39,7 @@ public class GeminiService {
                                                 Recommend Books based on: %s
     
                                                 You are a strict API.
+                                                recommend at least 10 books 
                                                 Return ONLY a valid JSON array of Book titles.
                                                 No explanation.
                                                 No markdown.
@@ -79,6 +80,7 @@ public class GeminiService {
                                                 Recommend movies based on: %s
     
                                                 You are a strict API.
+                                                recommend at least 10 movies
                                                 Return ONLY a valid JSON array of movie titles.
                                                 No explanation.
                                                 No markdown.
