@@ -1,44 +1,23 @@
 # Storyloom AI Recommendation Service
 
-An AI-powered book and movie recommendation microservice that uses **Google Gemini 2.5 Flash** to generate personalized suggestions and enriches them with real data from Open Library and TMDB via the Storyloom Catalog Service.
+An AI-powered book and movie recommendation microservice that uses Google Gemini 2.5 Flash to generate personalized suggestions and enriches them with real data from Open Library and TMDB via the Storyloom Catalog Service.
 
 ---
 
-## Architecture Overview
+## Overview
 
-This service is part of the **Storyloom** microservices ecosystem. It acts as the intelligent recommendation layer — the client sends a natural language prompt, and this service returns fully populated book or movie objects without the client needing to call any other service.
+This service is part of the Storyloom microservices ecosystem and acts as the intelligent recommendation layer: the client sends a natural language prompt, and the service returns fully populated book or movie objects without the client needing to call any other service.
 
-```
-Client
-  │
-  ▼
-POST /recommend/books  or  POST /recommend/movies   (plain text prompt)
-  │
-  ▼
-GeminiController
-  │
-  ▼
-GeminiService
-  ├── 1. Sends prompt to Google Gemini 2.5 Flash  ──►  [Gemini API]
-  │       └─ Returns JSON array of titles
-  │
-  └── 2. Sends titles to Catalog Service  ──►  [STORYLOOM-CATALOG-SERVICE]
-          └─ Returns enriched Book[] / Movie[] objects
-  │
-  ▼
-Response back to client
-```
+A request first reaches `GeminiController`, which hands off to `GeminiService`. That service sends the prompt to Google Gemini 2.5 Flash, which returns a JSON array of titles. `GeminiService` then passes those titles to the Catalog Service, which returns enriched `Book[]` or `Movie[]` objects, and the response is sent back to the client.
 
-### Internal Service Dependencies
+**Internal service dependencies**
 
 | Dependency | How it communicates | What it's for |
 |---|---|---|
-| **Google Gemini API** | REST (via `GeminiClient` Feign client) | Generates AI-powered title recommendations |
-| **Storyloom Catalog Service** | REST (via `StoryloomCatalogService` Feign client) | Fetches full book/movie details from Open Library & TMDB |
+| Google Gemini API | REST (via `GeminiClient` Feign client) | Generates AI-powered title recommendations |
+| Storyloom Catalog Service | REST (via `StoryloomCatalogService` Feign client) | Fetches full book/movie details from Open Library & TMDB |
 
-Both external calls use **Spring Cloud OpenFeign**. The Catalog Service is discovered through **Netflix Eureka** service registry.
-
----
+Both external calls use Spring Cloud OpenFeign. The Catalog Service is discovered through the Netflix Eureka service registry.
 
 ## Tech Stack
 
@@ -51,8 +30,6 @@ Both external calls use **Spring Cloud OpenFeign**. The Catalog Service is disco
 | Netflix Eureka Client | (managed by Spring Cloud) |
 | Google Gemini 2.5 Flash | (external AI API) |
 | Maven | build tool |
-
----
 
 ## Configuration
 
@@ -67,51 +44,40 @@ gemini.api.key=YOUR_GEMINI_API_KEY_HERE
 gemini.api.base-url=https://generativelanguage.googleapis.com
 ```
 
-### Required Properties
-
 | Property | Description |
 |---|---|
 | `gemini.api.key` | Your Google Gemini API key (obtainable from [Google AI Studio](https://aistudio.google.com/)) |
 | `gemini.api.base-url` | Base URL for the Gemini API (defaults to `https://generativelanguage.googleapis.com`) |
 
----
-
 ## Getting Started
 
 ### Prerequisites
 
-- **Java 21** installed
-- **Maven** installed
-- A valid **Google Gemini API key**
-- The **Storyloom Service Registry** (Eureka) must be running
-- The **Storyloom Catalog Service** must be running and registered in Eureka
+- Java 21
+- Maven
+- A valid Google Gemini API key
+- The Storyloom Service Registry (Eureka) running
+- The Storyloom Catalog Service running and registered in Eureka
 
 ### Running the Service
 
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd storyloom-ai-recommendation-service
-
-# Build and run
 ./mvnw spring-boot:run
 ```
 
-The service will start on **port 8081** and register itself with Eureka as `STORYLOOM-AI-RECOMMENDATION-SERVICE`.
-
----
+The service starts on port 8081 and registers itself with Eureka as `STORYLOOM-AI-RECOMMENDATION-SERVICE`.
 
 ## API Endpoints
 
-This service exposes exactly **two endpoints**, both under the `/recommend` base path.
+This service exposes two endpoints, both under the `/recommend` base path.
 
-> **Important:** Both endpoints accept **raw plain text** in the request body — not JSON. Do not wrap your input in quotes or JSON objects.
-
----
+> Both endpoints accept raw plain text in the request body, not JSON. Do not wrap input in quotes or JSON objects.
 
 ### `POST /recommend/books`
 
-Recommends books based on a natural language description. Returns enriched book data from Open Library.
+Recommends books based on a natural language description, returning enriched book data from Open Library.
 
 **Request**
 
@@ -122,7 +88,7 @@ Content-Type: text/plain
 I loved Dune and Ender's Game, recommend something similar
 ```
 
-**Success Response (`200 OK`)** — JSON array of Book objects:
+**Success response (`200 OK`)** — a JSON array of Book objects:
 
 ```json
 [
@@ -138,8 +104,6 @@ I loved Dune and Ender's Game, recommend something similar
 ]
 ```
 
-**Book Object Fields**
-
 | Field | Type | Description |
 |---|---|---|
 | `id` | `Long` | Auto-generated database ID |
@@ -150,17 +114,15 @@ I loved Dune and Ender's Game, recommend something similar
 | `key` | `String` | Open Library work key (e.g. `/works/OL17618370W`) |
 | `cover` | `String` | Full URL to the cover image from Open Library |
 
-**Error Response (`400 Bad Request`)**
+**Error response (`400 Bad Request`)**
 
 ```json
 { "Error": "Failed to parse Gemini Book response: ..." }
 ```
 
----
-
 ### `POST /recommend/movies`
 
-Recommends movies based on a natural language description. Returns enriched movie data from TMDB.
+Recommends movies based on a natural language description, returning enriched movie data from TMDB.
 
 **Request**
 
@@ -171,7 +133,7 @@ Content-Type: text/plain
 I want mind-bending sci-fi movies like Inception and Interstellar
 ```
 
-**Success Response (`200 OK`)** — JSON array of Movie objects:
+**Success response (`200 OK`)** — a JSON array of Movie objects:
 
 ```json
 [
@@ -186,8 +148,6 @@ I want mind-bending sci-fi movies like Inception and Interstellar
 ]
 ```
 
-**Movie Object Fields**
-
 | Field | Type | Description |
 |---|---|---|
 | `id` | `Long` | Auto-generated database ID |
@@ -197,13 +157,11 @@ I want mind-bending sci-fi movies like Inception and Interstellar
 | `releaseDate` | `String` | Release date in `YYYY-MM-DD` format |
 | `voteAverage` | `String` | TMDB user rating (out of 10) |
 
-**Error Response (`400 Bad Request`)**
+**Error response (`400 Bad Request`)**
 
 ```json
 { "Error": "Failed to parse Gemini movie response: ..." }
 ```
-
----
 
 ### Quick cURL Tests
 
@@ -219,8 +177,6 @@ curl -X POST http://localhost:8081/recommend/movies \
   -d "Funny animated movies like Shrek"
 ```
 
----
-
 ## Project Structure
 
 ```
@@ -235,23 +191,21 @@ src/main/java/com/example/storyloom_ai_recommendation_service/
     └── StoryloomCatalogService.java                   # Feign client → Catalog Service
 ```
 
-### Layer Breakdown
+**Layer breakdown**
 
 | Layer | File | Responsibility |
 |---|---|---|
-| **Controller** | `GeminiController` | Receives HTTP requests, returns responses, handles error mapping to `400` |
-| **Service** | `GeminiService` | Builds Gemini prompts, parses AI response into title lists, calls Catalog Service |
-| **Feign Client** | `GeminiClient` | Calls Gemini `generateContent` API with API key as query param |
-| **Feign Client** | `StoryloomCatalogService` | Calls Catalog Service endpoints to get full book/movie data |
-
----
+| Controller | `GeminiController` | Receives HTTP requests, returns responses, maps errors to `400` |
+| Service | `GeminiService` | Builds Gemini prompts, parses AI response into title lists, calls Catalog Service |
+| Feign Client | `GeminiClient` | Calls Gemini's `generateContent` API with the API key as a query parameter |
+| Feign Client | `StoryloomCatalogService` | Calls Catalog Service endpoints to get full book/movie data |
 
 ## Important Notes
 
 - **AI responses are non-deterministic.** Gemini may return different titles and counts for the same prompt on each call.
 - **Plain text input only.** The `@RequestBody String text` annotation means the entire request body is read as a raw string — do not send JSON-wrapped input.
 - **Movie lookups are fault-tolerant.** If a single movie title can't be found by the Catalog Service, it is silently skipped and the remaining results are still returned.
-- **Book lookups are not fault-tolerant.** A single failed book lookup will throw an exception and return a `400` for the entire request.
+- **Book lookups are not fault-tolerant.** A single failed book lookup throws an exception, returning a `400` for the entire request.
 - **This service has no database.** It is stateless — all data comes from Gemini and the Catalog Service on each request.
 
 ---
